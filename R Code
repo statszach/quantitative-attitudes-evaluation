@@ -1,0 +1,635 @@
+####################################################
+## QUANTITATIVE ATTITUDES PSYCHOMETRIC EVALUATION ##
+####################################################
+
+###########
+## V 0.3 ##
+###########
+
+##Last Updated: 7 June 2019
+                            #ZK wrote code for Quantitative Attitudes measure
+
+##To do: not calculating statistics due to too few df.
+
+# Alyssa added imputation in mirt (see section closer to bottom)
+
+######################
+## LOADING PACKAGES ##
+######################
+
+library(readxl)
+library(readr)
+library(MissMech)
+library(mirt)
+library(psych)
+library(lavaan)
+library(dplyr)
+library(tidyverse)
+
+
+####################
+## IMPORTING DATA ##
+####################
+
+URISample <- read_excel("C:/Users/Zach/Desktop/S18.xlsx")
+#URISample <- read_excel(file.choose())
+
+URISample <- URISample %>% filter(!is.na(QuantClassB))
+URISample <- URISample %>% filter(QANX1B != 0)
+
+
+CCRISample <- read_csv("C:/Users/Zach/Desktop/CCRIData_F18.csv")
+#CCRISample <- read_csv(file.choose())
+
+
+#####################
+## REVERSE SCORING ##
+#####################
+
+URISample$MA3B_R = 6 - URISample$MA3B
+URISample$MA4B_R = 6 - URISample$MA4B
+URISample$MA6B_R = 6 - URISample$MA6B
+URISample$MA7B_R = 6 - URISample$MA7B
+
+URISample$QSC2B_R = 6 - URISample$QSC2B
+URISample$QSC3B_R = 6 - URISample$QSC3B
+
+URISample$QUSE2B_R = 6 - URISample$QUSE2B
+
+URISample$MA3E_R = 6 - URISample$MA3E
+URISample$MA4E_R = 6 - URISample$MA4E
+URISample$MA6E_R = 6 - URISample$MA6E
+URISample$MA7E_R = 6 - URISample$MA7E
+
+URISample$QSC2E_R = 6 - URISample$QSC2E
+URISample$QSC3E_R = 6 - URISample$QSC3E
+
+URISample$QUSE2E_R = 6 - URISample$QUSE2E
+
+###Reverse Scoring SATS36
+#Items in order of the subscales, not numerically
+
+URISample$SATS4B = 8 - URISample$SATS4B
+URISample$SATS15B = 8 - URISample$SATS15B
+URISample$SATS18B = 8 - URISample$SATS18B
+URISample$SATS28B = 8 - URISample$SATS28B
+URISample$SATS5B = 8 - URISample$SATS5B
+URISample$SATS11B = 8 - URISample$SATS11B
+URISample$SATS26B = 8 - URISample$SATS26B
+URISample$SATS35B = 8 - URISample$SATS35B
+URISample$SATS7B = 8 - URISample$SATS7B
+URISample$SATS13B = 8 - URISample$SATS13B
+URISample$SATS16B = 8 - URISample$SATS16B
+URISample$SATS21B = 8 - URISample$SATS21B
+URISample$SATS25B = 8 - URISample$SATS25B
+URISample$SATS33B = 8 - URISample$SATS33B
+URISample$SATS8B = 8 - URISample$SATS8B
+URISample$SATS24B = 8 - URISample$SATS24B
+URISample$SATS30B = 8 - URISample$SATS30B
+URISample$SATS34B = 8 - URISample$SATS34B
+URISample$SATS36B = 8 - URISample$SATS36B
+
+CCRISample$MA3B_R = 6 - CCRISample$MA3B
+CCRISample$MA4B_R = 6 - CCRISample$MA4B
+CCRISample$MA6B_R = 6 - CCRISample$MA6B
+CCRISample$MA7B_R = 6 - CCRISample$MA7B
+
+CCRISample$QSC2B_R = 6 - CCRISample$QSC2B
+CCRISample$QSC3B_R = 6 - CCRISample$QSC3B
+
+CCRISample$QUSE2B_R = 6 - CCRISample$QUSE2B
+
+CCRISample$MA3E_R = 6 - CCRISample$MA3E
+CCRISample$MA4E_R = 6 - CCRISample$MA4E
+CCRISample$MA6E_R = 6 - CCRISample$MA6E
+CCRISample$MA7E_R = 6 - CCRISample$MA7E
+
+CCRISample$QSC2E_R = 6 - CCRISample$QSC2E
+CCRISample$QSC3E_R = 6 - CCRISample$QSC3E
+
+CCRISample$QUSE2E_R = 6 - CCRISample$QUSE2E
+
+###Reverse Scoring SATS36
+#Items in order of the subscales, not numerically
+
+CCRISample$SATS4B = 8 - CCRISample$SATS4B
+CCRISample$SATS15B = 8 - CCRISample$SATS15B
+CCRISample$SATS18B = 8 - CCRISample$SATS18B
+CCRISample$SATS28B = 8 - CCRISample$SATS28B
+CCRISample$SATS5B = 8 - CCRISample$SATS5B
+CCRISample$SATS11B = 8 - CCRISample$SATS11B
+CCRISample$SATS26B = 8 - CCRISample$SATS26B
+CCRISample$SATS35B = 8 - CCRISample$SATS35B
+CCRISample$SATS7B = 8 - CCRISample$SATS7B
+CCRISample$SATS13B = 8 - CCRISample$SATS13B
+CCRISample$SATS16B = 8 - CCRISample$SATS16B
+CCRISample$SATS21B = 8 - CCRISample$SATS21B
+CCRISample$SATS25B = 8 - CCRISample$SATS25B
+CCRISample$SATS33B = 8 - CCRISample$SATS33B
+CCRISample$SATS8B = 8 - CCRISample$SATS8B
+CCRISample$SATS24B = 8 - CCRISample$SATS24B
+CCRISample$SATS30B = 8 - CCRISample$SATS30B
+CCRISample$SATS34B = 8 - CCRISample$SATS34B
+CCRISample$SATS36B = 8 - CCRISample$SATS36B
+
+####################
+## SCORING SCALES ##
+####################
+
+URISample <- URISample %>% mutate(
+
+SATS_AVGB = (SATS1B + SATS2B + SATS3B + SATS4B + SATS5B + SATS6B + SATS7B + SATS8B + SATS9B + SATS10B +
+            SATS11B + SATS12B + SATS13B + SATS14B + SATS15B + SATS16B + SATS17B + SATS18B + SATS19B + SATS20B +
+            SATS21B + SATS22B + SATS23B + SATS24B + SATS25B + SATS26B + SATS27B + SATS28B + SATS29B + SATS30B +
+            SATS31B + SATS32B + SATS33B + SATS34B + SATS35B + SATS36B) / 36,
+
+SATS_AffectB = (SATS3B + SATS4B + SATS15B + SATS18B + SATS19B + SATS28B) / 6,
+
+SATS_CogCompB = (SATS5B + SATS11B + SATS26B + SATS31B + SATS32B + SATS35B) / 6,
+
+SATS_ValueB = (SATS7B + SATS9B + SATS10B + SATS13B + SATS16B + SATS17B + SATS21B + SATS25B + SATS33B) / 9,
+
+SATS_DifficultyB = (SATS6B + SATS8B + SATS22B + SATS24B + SATS30B + SATS34B + SATS36B) / 7,
+
+SATS_InterestB = (SATS12B + SATS20B + SATS23B + SATS29B) / 4,
+
+SATS_EffortB = (SATS1B + SATS2B + SATS14B + SATS27B) / 4,
+
+MA_AVGB = (MA1B + MA2B + MA3B_R + MA4B_R + MA5B + MA6B_R + MA7B_R + MA8B) / 8,
+
+QANX_AVGB = (QANX1B + QANX2B + QANX3B + QANX4B) / 4,
+
+QUSE_AVGB = (QUSE1B + QUSE2B + QUSE3B + QUSE4B) / 4,
+
+QINFL_AVGB = (QINFL1B + QINFL2B + QINFL3B + QINFL4B + QINFL5B + QINFL6B + QINFL7B) / 7,
+
+QSF_AVGB = (QSF1B + QSF2B + QSF3B + QSF4B) / 4,
+
+QHIND_AVGB = (QHIND1B + QHIND2B + QHIND3B + QHIND4B + QHIND5B) / 5,
+
+QSC_AVGB = (QSC1B + QSC2B_R + QSC3B_R + QSC4B) / 4,
+
+QSE_AVGB = (QSE1B + QSE2B + QSE3B + QSE4B + QSE5B + QSE6B) / 6
+
+)
+
+CCRISample <- CCRISample %>% mutate(
+  
+  SATS_AVGB = (SATS1B + SATS2B + SATS3B + SATS4B + SATS5B + SATS6B + SATS7B + SATS8B + SATS9B + SATS10B +
+                 SATS11B + SATS12B + SATS13B + SATS14B + SATS15B + SATS16B + SATS17B + SATS18B + SATS19B + SATS20B +
+                 SATS21B + SATS22B + SATS23B + SATS24B + SATS25B + SATS26B + SATS27B + SATS28B + SATS29B + SATS30B +
+                 SATS31B + SATS32B + SATS33B + SATS34B + SATS35B + SATS36B) / 36,
+  
+  SATS_AffectB = (SATS3B + SATS4B + SATS15B + SATS18B + SATS19B + SATS28B) / 6,
+  
+  SATS_CogCompB = (SATS5B + SATS11B + SATS26B + SATS31B + SATS32B + SATS35B) / 6,
+  
+  SATS_ValueB = (SATS7B + SATS9B + SATS10B + SATS13B + SATS16B + SATS17B + SATS21B + SATS25B + SATS33B) / 9,
+  
+  SATS_DifficultyB = (SATS6B + SATS8B + SATS22B + SATS24B + SATS30B + SATS34B + SATS36B) / 7,
+  
+  SATS_InterestB = (SATS12B + SATS20B + SATS23B + SATS29B) / 4,
+  
+  SATS_EffortB = (SATS1B + SATS2B + SATS14B + SATS27B) / 4,
+  
+  MA_AVGB = (MA1B + MA2B + MA3B_R + MA4B_R + MA5B + MA6B_R + MA7B_R + MA8B) / 8,
+  
+  QANX_AVGB = (QANX1B + QANX2B + QANX3B + QANX4B) / 4,
+  
+  QUSE_AVGB = (QUSE1B + QUSE2B + QUSE3B + QUSE4B) / 4,
+  
+  QINFL_AVGB = (QINFL1B + QINFL2B + QINFL3B + QINFL4B + QINFL5B + QINFL6B + QINFL7B) / 7,
+  
+  QSF_AVGB = (QSF1B + QSF2B + QSF3B + QSF4B) / 4,
+  
+  QHIND_AVGB = (QHIND1B + QHIND2B + QHIND3B + QHIND4B + QHIND5B) / 5,
+  
+  QSC_AVGB = (QSC1B + QSC2B_R + QSC3B_R + QSC4B) / 4,
+  
+  QSE_AVGB = (QSE1B + QSE2B + QSE3B + QSE4B + QSE5B + QSE6B) / 6
+  
+)
+
+
+##############################
+## MISSING DATA DIAGNOSTICS ##
+##############################
+
+BeginningTimePointItems <- c("ID", "MA1B", "MA2B", "MA3B_R", "MA4B_R", "MA5B", "MA6B_R", "MA7B_R", "MA8B",
+                         "QANX1B", "QANX2B", "QANX3B", "QANX4B", 
+                         "QUSE1B", "QUSE2B_R", "QUSE3B", "QUSE4B", 
+                         "QINFL1B", "QINFL2B", "QINFL3B", "QINFL4B", "QINFL5B", "QINFL6B", "QINFL7B", 
+                         "QSF1B", "QSF2B", "QSF3B", "QSF4B", 
+                         "QHIND1B", "QHIND2B", "QHIND3B", "QHIND4B", "QHIND5B", 
+                         "QSC1B", "QSC2B_R", "QSC3B_R", "QSC4B", 
+                         "QSE1B", "QSE2B", "QSE3B", "QSE4B", "QSE5B", "QSE6B", 
+                         "SATS1B", "SATS2B", "SATS3B", "SATS4B", "SATS5B", "SATS6B", "SATS7B", "SATS8B", "SATS9B", 
+                         "SATS10B", "SATS11B", "SATS12B", "SATS13B", "SATS14B", "SATS15B", "SATS16B", "SATS17B", 
+                         "SATS18B", "SATS19B", "SATS20B", "SATS21B", "SATS22B", "SATS23B", "SATS24B", "SATS25B", 
+                         "SATS26B", "SATS27B", "SATS28B", "SATS29B", "SATS30B", "SATS31B", "SATS32B", "SATS33B", 
+                         "SATS34B", "SATS35B", "SATS36B")
+
+EndTimePointItems <- c("ID", "MA1E", "MA2E", "MA3E_R", "MA4E_R", "MA5E", "MA6E_R", "MA7E_R", "MA8E",
+                       "QANX1E", "QANX2E", "QANX3E", "QANX4E", 
+                       "QUSE1E", "QUSE2E_R", "QUSE3E", "QUSE4E", 
+                       "QINFL1E", "QINFL2E", "QINFL3E", "QINFL4E", "QINFL5E", "QINFL6E", "QINFL7E", 
+                       "QSF1E", "QSF2E", "QSF3E", "QSF4E", 
+                       "QHIND1E", "QHIND2E", "QHIND3E", "QHIND4E", "QHIND5E", 
+                       "QSC1E", "QSC2E_R", "QSC3E_R", "QSC4E", 
+                       "QSE1E", "QSE2E", "QSE3E", "QSE4E", "QSE5E", "QSE6E", 
+                       "SATS1E", "SATS2E", "SATS3E", "SATS4E", "SATS5E", "SATS6E", "SATS7E", "SATS8E", "SATS9E", 
+                       "SATS10E", "SATS11E", "SATS12E", "SATS13E", "SATS14E", "SATS15E", "SATS16E", "SATS17E", 
+                       "SATS18E", "SATS19E", "SATS20E", "SATS21E", "SATS22E", "SATS23E", "SATS24E", "SATS25E", 
+                       "SATS26E", "SATS27E", "SATS28E", "SATS29E", "SATS30E", "SATS31E", "SATS32E", "SATS33E", 
+                       "SATS34E", "SATS35E", "SATS36E")
+
+URIBeginning<-URISample[BeginningTimePointItems]
+URIEnd <- URISample[EndTimePointItems]
+
+URIBeginning <- URIBeginning[rowSums(is.na(URIBeginning)) !=ncol(URIBeginning), ]
+URIEnd <- URIEnd[rowSums(is.na(URIEnd)) !=ncol(URIEnd), ]
+
+CCRIBeginning <- CCRISample[BeginningTimePointItems]
+CCRIEnd <- CCRISample[EndTimePointItems]
+
+CCRIBeginning <- CCRIBeginning[rowSums(is.na(CCRIBeginning)) !=ncol(CCRIBeginning), ]
+CCRIEnd <- CCRIEnd[rowSums(is.na(CCRIEnd)) !=ncol(CCRIEnd), ]
+
+
+##############################
+## MISSING DATA DIAGNOSTICS ##
+##############################
+
+TestMCARNormality(URIBeginning) #p < .001, not MCAR or MVN
+TestMCARNormality(CCRIBeginning) #Not calculated being only one mising data pattern.
+
+table(is.na(URIBeginning)) #F = 26482 T = 7488, 7488 / (7488 + 26482) = 22.04%
+table(is.na(CCRIBeginning)) #F = 18056, T = 114, 114 / (114 + 17826) = 0.64%
+
+####################################
+## RANDOMLY SPLITTING URI DATASET ##
+####################################
+
+set.seed(77)
+URIEFA <- URIBeginning[sample(1:nrow(URIBeginning), 100, replace=FALSE),]
+URICFA <- URIBeginning[-sample(1:nrow(URIBeginning), 100, replace=FALSE),]
+
+######################################
+## IMPUTING MISSING DATA FOR URIEFA ##
+######################################
+
+URIEFA <- as.matrix(URIEFA)
+
+URIEFAImp <- Impute(URIEFA)
+URIEFAImputed <- (URIEFAImp$yimp)
+
+URIEFAImputed <- as.data.frame(URIEFAImputed)
+
+################################################################
+## IMPUTING MISSING DATA FOR URI Beginning and CCRI Beginning ##
+################################################################
+
+URIBeginning <- as.matrix(URIBeginning)
+
+URIBeginningImp <- Impute(URIBeginning)
+URIImputed <- (URIBeginningImp$yimp)
+
+URIImputed <- as.data.frame(URIImputed)
+URIBeginning <- as.data.frame(URIBeginning)
+
+
+CCRIBeginning <- as.matrix(CCRIBeginning)
+
+CCRIBeginningImp <- Impute(CCRIBeginning)
+CCRIImputed <- (CCRIBeginningImp$yimp)
+
+CCRIImputed <- as.data.frame(CCRIImputed)
+CCRIBeginning <- as.data.frame(CCRIBeginning)
+#Creating rounded dataset for IRT analyses.
+
+URIIRT <- URIImputed %>% mutate_if(is.numeric, round, digits = 0)
+CCRIIRT <- CCRIImputed %>% mutate_if(is.numeric, round, digits = 0)
+
+
+####################################################
+## IMPUTING MISSING DATA FOR URI End and CCRI End ##
+####################################################
+
+URIEnd <- as.matrix(URIEnd)
+
+URIEndImp <- Impute(URIEnd)
+URIEndImputed <- (URIEndImp$yimp)
+
+URIEndImputed <- as.data.frame(URIImputed)
+
+CCRIEnd <- as.matrix(CCRIEnd)
+
+CCRIEndImp <- Impute(CCRIEnd)
+CCRIEndImputed <- (CCRIEndImp$yimp)
+
+CCRIEndImputed <- as.data.frame(CCRIImputed)
+
+URIPrePost <- merge(URIEndImputed, URIImputed, by = "ID")
+CCRIPrePost <- merge(CCRIEndImputed, CCRIImputed, by = "ID")
+
+##################
+## DEMOGRAPHICS ##
+##################
+
+table(URISample$GenderB) #N = 226 Female
+table(CCRISample$GenderB) #N = 158 Female
+
+table(URISample$RaceEth_B) #N = 243 White
+table(CCRISample$RaceEthB) #N = 120 White
+
+describe(URISample$age) #M = 19.60, SD = 4.80
+describe(CCRISample$AgeB) #M = 20.54, SD = 4.78
+
+table(CCRISample$QuantcourseY1N0B) #N = 125 in a quant-oriented class
+
+##########################
+## QUANTITATIVE ANXIETY ##
+##########################
+
+#Subsetting.
+
+QAnxB <- c("QANX1B", "QANX2B", "QANX3B", "QANX4B")
+
+QAnxB_URI <- URIEFAImputed[QAnxB]
+QAnxB_CCRI <- CCRIBeginning[QAnxB]
+
+QAnxB_URI_Imputed <- URIImputed[QAnxB]
+QAnxB_CCRI_Imputed <- CCRIImputed[QAnxB]
+
+#MAP test.
+
+VSS(QAnxB_URI) #1 Factor
+
+#EFA.
+
+fa(QAnxB_URI, factors=1 ,fm="minres")
+#All items retained
+#Loadings:
+#Item 1 0.89
+#Item 2 0.93
+#Item 3 0.92
+#Item 4 0.94
+#84% of variance explained.
+
+#CFA.
+
+QAnx.CFA.Model <- 'f1 =~ QANX1B + QANX2B + QANX3B + QANX4B'
+
+QANX.CFA.URI <- cfa(QAnx.CFA.Model, data=URICFA, missing="ML")
+summary(QANX.CFA.URI, fit.measures=TRUE)
+#chi-sq = 0.44, p = 0.80, CFI = 1.0, RMSEA = 0.00 (90% CI 0.00, 0.08), SRMR = 0.002
+parameterEstimates(QANX.CFA.URI, standardized=TRUE)
+#Loadings:
+#Item 1 0.85
+#Item 2 0.94
+#Item 3 0.93
+#Item 4 0.88
+
+QANX.CFA.CCRI <- cfa(QAnx.CFA.Model, data=CCRIBeginning, missing="ML")
+summary(QANX.CFA.CCRI, fit.measures=TRUE)
+#chi-sq = 12.86, p = 0.002, CFI = 0.98, RMSEA = 0.15 (90% CI 0.08, 0.24), SRMR = 0.03
+parameterEstimates(QANX.CFA.CCRI, standardized=TRUE)
+#Loadings:
+#Item 1 0.64
+#Item 2 0.82
+#Item 3 0.86
+#Item 4 0.81
+
+#Internal Consistency Reliability
+
+omega(QAnxB_URI_Imputed, fm="ml")
+#omega = 0.96, alpha = 0.94
+omega(QAnxB_CCRI_Imputed, fm = "ml")
+#omega = 0.92, alpha = 0.86
+
+#Test Retest Reliability
+cor.test(URIPrePost$QAnxB_Avg, URIPrePost$QAnxE_Avg, method="pearson", alternative="two.sided", conf.level=0.95, 
+         na.action=na.omit)
+cor.test(CCRIPrePost$QAnxB_Avg, CCRIPrePost$QAnxE_Avg, method="pearson", alternative="two.sided", conf.level=0.95, 
+         na.action=na.omit)
+
+#Convergent Validity (URI)
+
+cor.test(URIImputed$QAnxB_Avg, URIImputed$SATSB_Affect, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(URIImputed$QAnxB_Avg, URIImputed$SATSB_CogComp, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(URIImputed$QAnxB_Avg, URIImputed$SATSB_Value, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(URIImputed$QAnxB_Avg, URIImputed$SATSB_Difficulty, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(URIImputed$QAnxB_Avg, URIImputed$SATSB_Interest, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(URIImputed$QAnxB_Avg, URIImputed$SATSB_Effort, method="pearson", alternative="two.sided", conf.level=0.95)
+
+#Convergent Validity (CCRI)
+
+cor.test(CCRIImputed$QAnxB_Avg, CCRIImputed$SATSB_Avg, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$QAnxB_Avg, CCRIImputed$SATSB_Affect, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$QAnxB_Avg, CCRIImputed$SATSB_CogComp, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$QAnxB_Avg, CCRIImputed$SATSB_Value, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$QAnxB_Avg, CCRIImputed$SATSB_Difficulty, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$QAnxB_Avg, CCRIImputed$SATSB_Interest, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$QAnxB_Avg, CCRIImputed$SATSB_Effort, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$QAnxB_Avg, CCRIImputed$SATSB_Avg, method="pearson", alternative="two.sided", conf.level=0.95)
+
+#Graded Response Model: Note Alyssa added a number of plots and other pieces 
+# mirt imputation is directly below
+
+QAnxB_URI_IRT <- URISample[QAnxB]
+
+URIGRM <- mirt(QAnxB_URI_IRT, 1, itemtype = 'graded', removeEmptyRows=TRUE)
+# using listwise deletion for the model
+
+coef(URIGRM, simplify = T, IRTPars = T)
+URIGRM
+
+M2(URIGRM)
+# issues with getting the model level stats...
+
+# residual correlations among items (top triangle) 
+residuals(URIGRM)
+
+# after taking into account shared variance with a single construct, items 2 and 3 are still highly correlated
+# same thing with 3 and 4
+
+# this is indicative of not great fit
+
+# some more useful plots or statistics from a mirt model
+
+# trace plots/ICCs
+plot(URIGRM, type='trace', theta_lim=c(-4,4))
+
+# IICs (item level information)
+plot(URIGRM, type='infotrace', theta_lim = c(-4, 4))
+
+# test level information curves
+plot(URIGRM, type='info', theta_lim = c(-4, 4))
+
+
+URIGRMscores<-fscores(URIGRM, method = 'MAP')
+# will need these scores for imputing with MIRT (but should not have dropped missing data)
+
+# some other options for estimating factor scores
+fscores(URIGRM, method='EAP')
+fscores(URIGRM, method = 'EAPsum')
+
+# expected total score across theta
+plot(URIGRM, type='score', theta_lim=c(-4,4)) 
+
+## NEXT STEP: Figure out missing data imputation for IRT, run for CCRI data.
+
+##########################################################################################
+## Alyssa - right above is the last part I finished in the initial run of the code. My  ##
+## plan was to get this first set of code working, and then go back and do all of the   ##
+## assumption checks and data visualtion steps. After that, I figured it would be       ##
+## a piece of cake to run the code for the rest of the measures and type everything up. ##
+##########################################################################################
+
+### mirt imputation
+
+# recommended to do this a few times and average over (so more of multiple imputation than single)
+# practically speaking I'm not 100% sure how to easily average over the results
+# for a and b parameters, you obviously can simply take the average of them, but then the plots etc. can't be based on those...
+
+URIGRM2 <- mirt(QAnxB_URI_IRT, 1, itemtype = 'graded') # not removing missing data
+URIGRMscores2<-fscores(URIGRM2, method = 'MAP')
+
+fulldata <- imputeMissing(URIGRM2, URIGRMscores2)
+fullmod <- mirt(fulldata, 1, itemtype = 'graded')
+fullmod
+
+M2(fullmod) # still problems with too low df so no model fit stats?
+coef(fullmod, simplify = T, IRTPars = T)
+
+# trace plots/ICCs
+plot(fullmod, type='trace', theta_lim=c(-4,4))
+
+# IICs (item level information)
+plot(fullmod, type='infotrace', theta_lim = c(-4, 4))
+
+# test level information curves
+plot(fullmod, type='info', theta_lim = c(-4, 4))
+
+# can see that these results all look similar to the original GRM results
+# It seems like for these scales and this subset of the data there is no missing data on the 4 items though?
+
+
+############################
+## QUANTITATIVE ATTITUDES ##
+############################
+
+MAB <- c("MA1B", "MA2B", "MA3B_R", "MA4B_R", "MA5B", "MA6B_R", "MA7B_R", "MA8B")
+MAE <- c("MA1E", "MA2E", "MA3E_R", "MA4E_R", "MA5E", "MA6E_R", "MA7E_R", "MA8E")
+
+MAB_URI <- URIEFAImputed[MAB]
+MAB_CCRI <- CCRIBeginning[MAB]
+
+MAB_URI_Imputed <- URIImputed[MAB]
+MAB_CCRI_Imputed <- CCRIImputed[MAB]
+
+#MAP test.
+
+VSS(MAB_URI) #2 Factors, note: ultra-heywood case detected
+
+#EFA.
+
+fa(MAB_URI, nfactors=2, rotate="Promax", fm="minres")
+#All items retained
+#Factor 1
+#Loadings:
+#Item 1 0.93
+#Item 4 -0.96
+#Item 5 0.78
+#Item 8 0.69
+#37% of variance explained.
+#Factor 2
+#Loadings:
+#Item 2 -0.94
+#Item 3 0.86
+#Item 6 0.70
+#Item 7 0.69
+#30% of variance explained.
+#CFA.
+
+MA.CFA.Model <- 'f1 =~ MA1B + MA4B_R + MA5B + MA8B
+                 f2 =~ MA2B + MA3B_R + MA6B_R + MA7B_R
+
+                 f1~~f2'
+
+MA.CFA.URI <- cfa(MA.CFA.Model, data=URICFA, missing="ML")
+summary(MA.CFA.URI, fit.measures=TRUE)
+#chi-sq = 0.44, p = 0.80, CFI = 1.0, RMSEA = 0.00 (90% CI 0.00, 0.08), SRMR = 0.002
+parameterEstimates(MA.CFA.URI, standardized=TRUE)
+#Loadings:
+#Item 1 0.85
+#Item 2 0.94
+#Item 3 0.93
+#Item 4 0.88
+
+MA.CFA.CCRI <- cfa(MA.CFA.Model, data=CCRIBeginning, missing="ML")
+summary(MA.CFA.CCRI, fit.measures=TRUE)
+#chi-sq = 12.86, p = 0.002, CFI = 0.98, RMSEA = 0.15 (90% CI 0.08, 0.24), SRMR = 0.03
+parameterEstimates(MA.CFA.CCRI, standardized=TRUE)
+#Loadings:
+#Item 1 0.64
+#Item 2 0.82
+#Item 3 0.86
+#Item 4 0.81
+
+#Internal Consistency Reliability
+
+omega(MAB_URI_Imputed, fm="ml")
+#omega = 0.96, alpha = 0.94
+omega(MAB_CCRI_Imputed, fm = "ml")
+#omega = 0.92, alpha = 0.86
+
+#Test Retest Reliability
+cor.test(URIPrePost$MAB_Avg, URIPrePost$MAE_Avg, method="pearson", alternative="two.sided", conf.level=0.95, 
+         na.action=na.omit)
+cor.test(CCRIPrePost$MAB_Avg, CCRIPrePost$MAE_Avg, method="pearson", alternative="two.sided", conf.level=0.95, 
+         na.action=na.omit)
+
+#Convergent Validity (URI)
+
+cor.test(URIImputed$MAB_Avg, URIImputed$SATSB_Affect, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(URIImputed$MAB_Avg, URIImputed$SATSB_CogComp, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(URIImputed$MAB_Avg, URIImputed$SATSB_Value, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(URIImputed$MAB_Avg, URIImputed$SATSB_Difficulty, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(URIImputed$MAB_Avg, URIImputed$SATSB_Interest, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(URIImputed$MAB_Avg, URIImputed$SATSB_Effort, method="pearson", alternative="two.sided", conf.level=0.95)
+
+#Convergent Validity (CCRI)
+
+cor.test(CCRIImputed$MAB_Avg, CCRIImputed$SATSB_Avg, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$MAB_Avg, CCRIImputed$SATSB_Affect, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$MAB_Avg, CCRIImputed$SATSB_CogComp, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$MAB_Avg, CCRIImputed$SATSB_Value, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$MAB_Avg, CCRIImputed$SATSB_Difficulty, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$MAB_Avg, CCRIImputed$SATSB_Interest, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$MAB_Avg, CCRIImputed$SATSB_Effort, method="pearson", alternative="two.sided", conf.level=0.95)
+
+cor.test(CCRIImputed$MAB_Avg, CCRIImputed$SATSB_Avg, method="pearson", alternative="two.sided", conf.level=0.95)
